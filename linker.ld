@@ -6,6 +6,7 @@ SECTIONS
     __start = .;
     .text :
     {
+        *(.text._start)
         KEEP(*(.text.boot))
         *(.text)
     }

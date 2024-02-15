@@ -13,13 +13,9 @@ mod boot {
 }
 
 // GPIO addresses
-const GPIO_BASE: u32 = 0x3F20_0000;
-const GPIO_FSEL2: u32 = GPIO_BASE + 0x08;
-const GPIO_SET: u32 = GPIO_BASE + 0x1C;
-const GPIO_CLEAR: u32 = GPIO_BASE + 0x28;
-
-// Pin configuration
-const PIN_21: u32 = 1 << 21;
+const GPIO_FSEL0: u32 = 0x3F20_0000;
+const GPIO_FSEL1: u32 = 0x3F20_0004;
+const GPIO_FSEL2: u32 = 0x3F20_0008;
 
 // Timer base address
 const TIMER_BASE: u32 = 0x3F00_3000;
@@ -49,31 +45,6 @@ fn delay_ms(ms: u32) {
 }
 
 
-// Function to set a pin as an output
-fn set_pin_output(pin: u32) {
-    unsafe {
-        let reg = (GPIO_FSEL2 as *mut u32).add((pin / 10) as usize);
-        let shift = (pin % 10) * 3;
-        let mask = 0b111 << shift;
-        let value = 0b001 << shift;
-        let current = core::ptr::read_volatile(reg);
-        core::ptr::write_volatile(reg, (current & !mask) | value);
-    }
-} 
-
-// Function to set a pin high
-fn set_pin_high(pin: u32) {
-    unsafe {
-        core::ptr::write_volatile((GPIO_SET + ((pin / 32) * 4)) as *mut u32, 1 << (pin % 32));
-    }
-}
-
-// Function to set a pin low
-fn set_pin_low(pin: u32) {
-    unsafe {
-        core::ptr::write_volatile((GPIO_CLEAR + ((pin / 32) * 4)) as *mut u32, 1 << (pin % 32));
-    }
-}
 
 struct GPIO;
 
@@ -118,11 +89,7 @@ pub extern "C" fn _start() -> ! {
     set_pin_output(PIN_21);
 
     loop {
-        // Turn pin 21 on and off every five seconds
-        set_pin_high(PIN_21);
-        delay_ms(5000); // Non blocking delay for five seconds
-        set_pin_low(PIN_21);
-        delay_ms(5000);
+        
     }
 }
 

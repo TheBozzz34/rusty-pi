@@ -18,6 +18,10 @@ const GPIO_FSEL0: u32 = 0x3F20_0000;
 const GPIO_FSEL1: u32 = 0x3F20_0004;
 const GPIO_FSEL2: u32 = 0x3F20_0008;
 
+const GPIO_SET0: u32 = 0x3F20_001C;
+const GPIO_CLR0: u32 = 0x3F20_0028;
+
+
 
 // Pin configuration
 const PIN_21: u32 = 1 << 21;
@@ -84,13 +88,52 @@ impl GPIO {
             core::ptr::write_volatile(register as *mut u32, val); 
         }
     }
+
+    pub fn set(pin: u32) {
+        let bitpos = pin;
+
+        let mut val: u32 = 0;
+
+        unsafe {
+            val = core::ptr::read_volatile(GPIO_SET0 as *mut u32);
+        }
+
+        val |= 1 << bitpos;
+
+        unsafe {
+            core::ptr::write_volatile(GPIO_SET0 as *mut u32, val); 
+        }
+
+    }
+
+    pub fn clear(pin: u32) {
+        let bitpos = pin;
+
+        let mut val: u32 = 0;
+
+        unsafe {
+            val = core::ptr::read_volatile(GPIO_CLR0 as *mut u32);
+        }
+
+        val |= 1 << bitpos;
+
+        unsafe {
+            core::ptr::write_volatile(GPIO_CLR0 as *mut u32, val); 
+        }
+
+    }
 }
 
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
 
-    loop {
+    GPIO::set_output(21);
+
+    unsafe {
+        loop {
+
+        }
     }
 }
 

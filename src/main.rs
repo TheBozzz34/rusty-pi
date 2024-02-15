@@ -1,11 +1,6 @@
 #![no_std]
 #![no_main]
 
-
-// 3F20_0008 fsel2 1<<3 turn pin 21 into output
-// 3F20_001C gpio1_set 1<<21 turns pin 21 on
-// 3F20_0028 gpio1_clear 1<<21 turns pin 21 off
-
 use core::panic::PanicInfo;
 use core::arch::asm;
 
@@ -17,11 +12,13 @@ mod boot {
     );
 }
 
-//GPIO addresses
+// GPIO addresses
 const GPIO_BASE: u32 = 0x3F20_0000;
 const GPIO_FSEL2: u32 = GPIO_BASE + 0x08;
 const GPIO_SET: u32 = GPIO_BASE + 0x1C;
 const GPIO_CLEAR: u32 = GPIO_BASE + 0x28;
+
+// Pin configuration
 const PIN_21: u32 = 1 << 21;
 
 // Timer base address
@@ -77,6 +74,43 @@ fn set_pin_low(pin: u32) {
         core::ptr::write_volatile((GPIO_CLEAR + ((pin / 32) * 4)) as *mut u32, 1 << (pin % 32));
     }
 }
+
+struct GPIO;
+
+impl GPIO {
+    pub fn set_output(pin: u32) {
+
+        let reg = pin/10;
+
+        let register = match reg {
+            0 => GPIO_FSEL0,
+            1 => GPIO_FSEL1,
+            2 => GPIO_FSEL2,
+            _ => panic!("Invalid pin number"),
+        }
+
+        let mut val: u32 = 0;
+
+        unsafe {
+            val = core::ptr::read_volatile(register as * mut32); 
+        }
+
+        let mask: u32 = 0b111;
+
+        let pinnum = pin%10;
+
+        mask = mask << pinnum*3;
+
+        val = val & !mask;
+
+        val |= 1 << pinnum*3;
+
+        unsafe {
+            val = core::ptr::write_volatile(register as * mut32, val); 
+        }
+    }
+}
+
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {

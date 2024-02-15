@@ -24,6 +24,33 @@ const GPIO_SET: u32 = GPIO_BASE + 0x1C;
 const GPIO_CLEAR: u32 = GPIO_BASE + 0x28;
 const PIN_21: u32 = 1 << 21;
 
+// Timer base address
+const TIMER_BASE: u32 = 0x3F00_3000;
+
+// Offsets for system timer registers
+const SYSTEM_TIMER_CLO: u32 = SYSTEM_TIMER_BASE + 0x04;
+const SYSTEM_TIMER_C0: u32 = SYSTEM_TIMER_BASE + 0x0C;
+
+// Function to get the current system timer counter
+fn get_system_timer() -> u64 {
+    unsafe {
+        let lo = core::ptr::read_volatile(SYSTEM_TIMER_CLO as *const u32) as u64;
+        let hi = core::ptr::read_volatile(SYSTEM_TIMER_C0 as *const u32) as u64;
+        (hi << 32) | lo
+    }
+}
+
+// Delay function using the system timer
+fn delay_ms(ms: u32) {
+    let start = get_system_timer();
+    let mut end = start + (ms as u64 * 1_000); // Convert ms to microseconds
+    // If end overflows, adjust it
+    if end < start {
+        end = u64::max_value();
+    }
+    while get_system_timer() < end {}
+}
+
 
 // Function to set a pin as an output
 fn set_pin_output(pin: u32) {
@@ -57,22 +84,14 @@ pub extern "C" fn _start() -> ! {
     set_pin_output(PIN_21);
 
     loop {
-        // Turn pin 21 on and off
+        // Turn pin 21 on and off every five seconds
         set_pin_high(PIN_21);
-        delay(5000);
+        delay_ms(5000); // Non blocking delay for five seconds
         set_pin_low(PIN_21);
-        delay(5000);
+        delay_ms(5000);
     }
 }
 
-// Delay function
-fn delay(count: usize) {
-    for _ in 0..count {
-        unsafe {
-            asm!("nop");
-        }
-    }
-}
 
 #[panic_handler]
 fn panic (_info: &PanicInfo) -> ! {

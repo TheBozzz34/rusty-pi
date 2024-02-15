@@ -5,14 +5,6 @@ use core::panic::PanicInfo;
 use core::arch::asm;
 
 
-mod boot {
-    use core::arch::global_asm;
-
-    global_asm!(
-        ".section .text._start"
-    );
-}
-
 // GPIO addresses
 const GPIO_FSEL0: u32 = 0x3F20_0000;
 const GPIO_FSEL1: u32 = 0x3F20_0004;
@@ -125,15 +117,18 @@ impl GPIO {
 }
 
 
+
+#[link_section = ".text._start"]
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
 
     GPIO::set_output(21);
 
-    unsafe {
-        loop {
-
-        }
+    loop {
+        GPIO::set(21);
+        delay_ms(5000);
+        GPIO::clear(21);
+        delay_ms(5000);
     }
 }
 

@@ -17,8 +17,12 @@ const GPIO_FSEL0: u32 = 0x3F20_0000;
 const GPIO_FSEL1: u32 = 0x3F20_0004;
 const GPIO_FSEL2: u32 = 0x3F20_0008;
 
+
+// Pin configuration
+const PIN_21: u32 = 1 << 21;
+
 // Timer base address
-const TIMER_BASE: u32 = 0x3F00_3000;
+const SYSTEM_TIMER_BASE: u32 = 0x3F00_3000;
 
 // Offsets for system timer registers
 const SYSTEM_TIMER_CLO: u32 = SYSTEM_TIMER_BASE + 0x04;
@@ -43,7 +47,6 @@ fn delay_ms(ms: u32) {
     }
     while get_system_timer() < end {}
 }
-
 
 
 struct GPIO;
@@ -85,11 +88,8 @@ impl GPIO {
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    // Set pin 21 as an output
-    set_pin_output(PIN_21);
 
     loop {
-        
     }
 }
 

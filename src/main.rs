@@ -67,7 +67,7 @@ impl GPIO {
         let mut val: u32 = 0;
 
         unsafe {
-            val = core::ptr::read_volatile(register as *mut mut32); 
+            val = core::ptr::read_volatile(register as *mut u32); 
         }
 
         let mut mask: u32 = 0b111;
@@ -81,7 +81,7 @@ impl GPIO {
         val |= 1 << pinnum*3;
 
         unsafe {
-            core::ptr::write_volatile(register as *mut, val); 
+            core::ptr::write_volatile(register as *mut u32, val); 
         }
     }
 }

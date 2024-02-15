@@ -17,32 +17,61 @@ mod boot {
     );
 }
 
+//GPIO addresses
+const GPIO_BASE: u32 = 0x3F20_0000;
+const GPIO_FSEL2: u32 = GPIO_BASE + 0x08;
+const GPIO_SET: u32 = GPIO_BASE + 0x1C;
+const GPIO_CLEAR: u32 = GPIO_BASE + 0x28;
+const PIN_21: u32 = 1 << 21;
+
+
+// Function to set a pin as an output
+fn set_pin_output(pin: u32) {
+    unsafe {
+        let reg = (GPIO_FSEL2 as *mut u32).add((pin / 10) as usize);
+        let shift = (pin % 10) * 3;
+        let mask = 0b111 << shift;
+        let value = 0b001 << shift;
+        let current = core::ptr::read_volatile(reg);
+        core::ptr::write_volatile(reg, (current & !mask) | value);
+    }
+} 
+
+// Function to set a pin high
+fn set_pin_high(pin: u32) {
+    unsafe {
+        core::ptr::write_volatile((GPIO_SET + ((pin / 32) * 4)) as *mut u32, 1 << (pin % 32));
+    }
+}
+
+// Function to set a pin low
+fn set_pin_low(pin: u32) {
+    unsafe {
+        core::ptr::write_volatile((GPIO_CLEAR + ((pin / 32) * 4)) as *mut u32, 1 << (pin % 32));
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    // Set pin 21 as an output
+    set_pin_output(PIN_21);
 
-    unsafe {
-        // Turn pin 21 into an output
-        core::ptr::write_volatile(0x3F20_0008 as *mut u32, 1<<3);
-         
-        loop {
-            // Turn pin 21 on and off
+    loop {
+        // Turn pin 21 on and off
+        set_pin_high(PIN_21);
+        delay(5000);
+        set_pin_low(PIN_21);
+        delay(5000);
+    }
+}
 
-            core::ptr::write_volatile(0x3F20_001C as *mut u32, 1<<21);
-
-
-            for _ in 1..5000 {
-                asm!("nop");
-            }
-
-
-            core::ptr::write_volatile(0x3F20_0028 as *mut u32, 1<<21);
-
-            for _ in 1..5000 {
-                asm!("nop");
-            }
+// Delay function
+fn delay(count: usize) {
+    for _ in 0..count {
+        unsafe {
+            asm!("nop");
         }
-
-    } 
+    }
 }
 
 #[panic_handler]

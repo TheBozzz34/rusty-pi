@@ -61,15 +61,15 @@ impl GPIO {
             1 => GPIO_FSEL1,
             2 => GPIO_FSEL2,
             _ => panic!("Invalid pin number"),
-        }
+        };
 
         let mut val: u32 = 0;
 
         unsafe {
-            val = core::ptr::read_volatile(register as * mut32); 
+            val = core::ptr::read_volatile(register as *mut32); 
         }
 
-        let mask: u32 = 0b111;
+        let mut mask: u32 = 0b111;
 
         let pinnum = pin%10;
 
@@ -80,7 +80,7 @@ impl GPIO {
         val |= 1 << pinnum*3;
 
         unsafe {
-            val = core::ptr::write_volatile(register as * mut32, val); 
+            core::ptr::write_volatile(register as *   mut32, val); 
         }
     }
 }
